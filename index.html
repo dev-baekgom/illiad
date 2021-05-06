@@ -1,0 +1,226 @@
+<!doctype html>
+<!-- See http://www.firepad.io/docs/ for detailed embedding docs. -->
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <title>Illiad - Online HTML Editor</title>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/5.5.4/firebase.js"></script>
+  <!-- ACE and its JavaScript mode and theme files -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.2.5/ace.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.2.5/mode-javascript.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/theme-nord_dark.min.js"
+    integrity="sha512-Yrb8fdpeml10Onax7VERUl9ea2bAU/OPQ3IASUNqed9o+EotsVU9L4mgB4jXZQWDjav4VD2HSjiWlwOmfKeJRQ=="
+    crossorigin="anonymous"></script>
+
+  <!-- Firepad -->
+  <link rel="stylesheet" href="https://firepad.io/releases/v1.5.9/firepad.css" />
+  <script src="https://firepad.io/releases/v1.5.9/firepad.min.js"></script>
+
+  <!--jquery & jquery ui-->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/smoothness/jquery-ui.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+
+  <!--fonts-->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/earlyaccess/nanumgothiccoding.css" />
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Righteous&display=swap" rel="stylesheet">
+
+  <!--bootstrap-->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-BmbxuPwQa2lc/FVzBcNJ7UAyJxM6wuqIj61tLrc4wSX0szH/Ev+nYRRuWlolflfl" crossorigin="anonymous">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-b5kHyXgcpbZJO/tY9Ul7kGkf1S0CWuKcCD38l8YkeH8z8QjE0GmW1gYU5S9FOnJ0" crossorigin="anonymous">
+  </script>
+</head>
+
+<body>
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="#">ILLIAD</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
+        aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown"
+              aria-expanded="false">
+              File
+            </a>
+            <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+              <li><a class="dropdown-item" href="#" onclick="download_file('index.html')">Download</a></li>
+              <li>
+                <hr class="dropdown-divider">
+              </li>
+              <li><a id="code" class="dropdown-item" href="#" onclick="copyToClipboard(window.location);">copy url</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#" onclick="reload();">Reload_Peview</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link disabled" href="#" tabindex="-1" aria-disabled="true">Comming Soon : Chat</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <div id="firepad-container"></div>
+  <div id="preview_wrap">
+    <iframe id="preview" frameborder="0"></iframe>
+  </div>
+
+  <script>
+    //// Initialize Firebase.
+    //// TODO: replace with your Firebase project configuration.
+    var config = {
+      apiKey: "AIzaSyDApq-BzvxJdHqXjQVGg06C1wt--eh9nS8",
+      authDomain: "oce3-bfa9e.firebaseapp.com",
+      databaseURL: "https://oce3-bfa9e-default-rtdb.firebaseio.com",
+      projectId: "oce3-bfa9e",
+      storageBucket: "oce3-bfa9e.appspot.com",
+      messagingSenderId: "514390108165",
+      appId: "1:514390108165:web:bf274113d25b2ed19cd46c",
+      measurementId: "G-4KN7FSZSD6"
+    };
+    firebase.initializeApp(config);
+
+    //// Get Firebase Database reference.
+    var firepadRef = getExampleRef();
+
+    //// Create ACE
+    var editor = ace.edit("firepad-container");
+    editor.setTheme("ace/theme/xcode");
+    var session = editor.getSession();
+    session.setUseWrapMode(true);
+    session.setUseWorker(false);
+    session.setMode("ace/mode/html");
+
+    //// Create Firepad.
+    var firepad = Firepad.fromACE(firepadRef, editor, {
+      defaultText: "<!--This is an example code to guide you!-->\n<!DOCTYPE html>\n<html>\n   <head>\n       <title>Welcome!<\/title>\n       <script>\/\/alert(\"You can use scripts!\")<\/script>\n   <\/head>\n   <body>\n       <h1 style=\"font-size: 35px; \/\/you can use styles too!\">Hello! thank you for using this editor!<\/h1>\n\t\t<ul>\n\t\t\t<li>You can edit code in this text area!<\/li>\n\t\t\t<li>Click the reload button to preview your code!<\/li>\n\t\t\t<li>Download it by clicking the download button!<\/li>\n\t\t\t<li>Share your code by clicking upload button!<\/li>\n\t\t\t<li>Open Your code by clicking the button next to it!<\/li>\n \t\t<\/ul>\n\t<\/body>\n<\/html>"
+    });
+
+    // Helper to get hash from end of URL or generate a random one.
+    function getExampleRef() {
+      var ref = firebase.database().ref();
+      var hash = window.location.hash.replace(/#/g, '');
+      if (hash) {
+        ref = ref.child(hash);
+      } else {
+        ref = ref.push(); // generate unique location.
+        window.location = window.location + '#' + ref.key; // add it as a hash to the URL.
+      }
+      if (typeof console !== 'undefined') {
+        console.log('Firebase data: ', ref.toString());
+      }
+      return ref;
+    }
+
+    function reload() {
+      var editorHTML = editor.getValue();
+      var iframe = document.getElementById('preview');
+      iframe.contentWindow.document.open();
+      iframe.contentWindow.document.write(editorHTML);
+      iframe.contentWindow.document.close();
+    }
+
+    $(function () {
+      $("#preview_wrap")
+        .resizable()
+        .draggable();
+    });
+
+    function download_file(filename) {
+      var text = editor.getValue();
+      text = text.replace(/\n/g, "\r\n"); // To retain the Line breaks.
+      var blob = new Blob([text], {
+        type: "text/html"
+      });
+      var anchor = document.createElement("a");
+      anchor.download = filename;
+      anchor.href = window.URL.createObjectURL(blob);
+      anchor.target = "_blank";
+      anchor.style.display = "none"; // just to be safe!
+      document.body.appendChild(anchor);
+      anchor.click();
+      document.body.removeChild(anchor);
+    }
+
+    function copyToClipboard(val) {
+      const t = document.createElement("textarea");
+      document.body.appendChild(t);
+      t.value = val;
+      t.select();
+      document.execCommand('copy');
+      document.body.removeChild(t);
+    }
+  </script>
+
+  <style>
+    html,
+    body {
+      margin: 0;
+      height: 100%;
+    }
+
+    nav {
+      font-family: 'Exo 2', sans-serif;
+    }
+
+    .navbar-brand{
+      font-family: 'Righteous', cursive;
+    }
+
+    #firepad-container {
+      width: 100%;
+      height: 100%;
+      font-size: 20px;
+    }
+
+    .firepad {
+      height: calc(100% - 56px);
+    }
+
+    a.powered-by-firepad {
+      display: none;
+    }
+
+    #preview_wrap {
+      position: fixed;
+      padding-top: 20px;
+      background-color: #363c3d;
+      z-index: 1;
+      visibility: visible;
+      top: 100px;
+      right: 50px;
+      width: 300px;
+      height: 500px;
+      border-radius: 5px;
+      box-shadow: 5px 5px 15px 5px grey;
+    }
+
+    #preview {
+      margin: 0px;
+      padding: 0px;
+      box-shadow: none;
+      height: 100%;
+      width: 100%;
+      background-color: #ffffff;
+      border-bottom-left-radius: 5px;
+      border-bottom-right-radius: 5px;
+      border-top-left-radius: 0px;
+      border-top-right-radius: 0px;
+    }
+  </style>
+</body>
+
+</html>
